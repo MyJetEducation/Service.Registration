@@ -24,12 +24,12 @@
     <TargetsForTfmSpecificBuildOutput>
       $(TargetsForTfmSpecificBuildOutput);PackReferencedProjectOutputs
     </TargetsForTfmSpecificBuildOutput>
-    <PackageId>MyJetWallet.Service.Registration.Client</PackageId>
-    <Authors>MyJetWallet</Authors>
-    <Company>MyJetWallet</Company>
-    <Product>MyJetWallet</Product>
-    <PackageProjectUrl>https://github.com/MyJetWallet/Service.Registration</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/MyJetWallet/Service.Registration</RepositoryUrl>
+    <PackageId>MyJetEducation.Service.Registration.Client</PackageId>
+    <Authors>MyJetEducation</Authors>
+    <Company>MyJetEducation</Company>
+    <Product>MyJetEducation</Product>
+    <PackageProjectUrl>https://github.com/MyJetEducation/Service.Registration</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MyJetEducation/Service.Registration</RepositoryUrl>
   </PropertyGroup>
 
   <Target Name="PackReferencedProjectOutputs" DependsOnTargets="BuildOnlySettings;ResolveReferences">

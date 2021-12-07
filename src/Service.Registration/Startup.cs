@@ -26,7 +26,7 @@ namespace Service.Registration
 
             services.AddHostedService<ApplicationLifetimeManager>();
 
-            services.AddMyTelemetry("SP-", Program.Settings.ZipkinUrl);
+            services.AddMyTelemetry("ED-", Program.Settings.ZipkinUrl);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
