@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MyJetEducation.Service.Core.Client" Version="1.0.4" />
+    <PackageReference Include="MyJetEducation.Service.Core.Client" Version="1.0.5" />
     <PackageReference Include="MyJetWallet.Service.AuditLog.Client" Version="1.1.0" />
     <PackageReference Include="MyJetWallet.Service.Authorization.Client" Version="2.1.0" />
     <PackageReference Include="MyJetWallet.Service.PersonalData.Client" Version="1.1.0" />
