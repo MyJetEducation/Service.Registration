@@ -36,12 +36,16 @@ namespace Service.Registration.Services
 			if (hash == null)
 				return CommonGrpcResponse.Fail;
 
-			CommonGrpcResponse createResponse = await _userInfoService.CreateUserInfoAsync(new UserInfoRegisterRequest
+			var userInfoRegisterRequest = new UserInfoRegisterRequest
 			{
 				UserName = request.UserName,
 				Password = request.Password,
 				ActivationHash = hash
-			});
+			};
+
+			_logger.LogDebug($"Create user info: {JsonSerializer.Serialize(userInfoRegisterRequest)}");
+
+			CommonGrpcResponse createResponse = await _userInfoService.CreateUserInfoAsync(userInfoRegisterRequest);
 
 			if (!createResponse.IsSuccess)
 				return CommonGrpcResponse.Fail;
@@ -67,7 +71,7 @@ namespace Service.Registration.Services
 			if (email == null)
 				return CommonGrpcResponse.Fail;
 
-			_logger.LogDebug("Confirm user {email} request.", email);
+			_logger.LogDebug("Confirm user registration for {email} with hash: {hash}.", email, hash);
 
 			CommonGrpcResponse response = await _userInfoService.ConfirmUserInfoAsync(new UserInfoConfirmRequest
 			{
