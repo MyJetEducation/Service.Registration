@@ -14,7 +14,7 @@ namespace Service.Registration
 {
     public class Program
     {
-        public const string SettingsFileName = ".myjetwallet";
+        public const string SettingsFileName = ".myjeteducation";
 
         public static SettingsModel Settings { get; private set; }
 
@@ -32,11 +32,11 @@ namespace Service.Registration
 
         public static void Main(string[] args)
         {
-            Console.Title = "MyJetWallet Service.Registration";
+            Console.Title = "MyJetEducation Service.Registration";
 
             Settings = SettingsReader.GetSettings<SettingsModel>(SettingsFileName);
 
-            using var loggerFactory = LogConfigurator.ConfigureElk("MyJetWallet", Settings.SeqServiceUrl, Settings.ElkLogs);
+            using var loggerFactory = LogConfigurator.ConfigureElk("MyJetEducation", Settings.SeqServiceUrl, Settings.ElkLogs);
 
             var logger = loggerFactory.CreateLogger<Program>();
 
