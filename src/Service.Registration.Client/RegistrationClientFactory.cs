@@ -11,6 +11,6 @@ namespace Service.Registration.Client
         {
         }
 
-        public IHelloService GetHelloService() => CreateGrpcService<IHelloService>();
+        public IRegistrationService GetRegistrationService() => CreateGrpcService<IRegistrationService>();
     }
 }

@@ -1,15 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MyJetEducation.Service.Core.Client" Version="1.0.4" />
+    <PackageReference Include="MyJetWallet.Service.AuditLog.Client" Version="1.1.0" />
+    <PackageReference Include="MyJetWallet.Service.Authorization.Client" Version="2.1.0" />
+    <PackageReference Include="MyJetWallet.Service.PersonalData.Client" Version="1.1.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Service.Registration.Domain.Models\Service.Registration.Domain.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

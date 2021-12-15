@@ -13,5 +13,11 @@ namespace Service.Registration.Settings
 
         [YamlProperty("Registration.ElkLogs")]
         public LogElkSettings ElkLogs { get; set; }
+
+        [YamlProperty("Registration.ServiceBusWriter")]
+        public string ServiceBusWriter { get; set; }
+
+        [YamlProperty("Registration.UserInfoCrudServiceUrl")]
+        public string UserInfoCrudServiceUrl { get; set; }
     }
 }

@@ -15,7 +15,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.101
+        dotnet-version: 6.0.*
 
     - name: Get current time
       uses: MyJetTools/get-current-time@v2
@@ -45,31 +45,39 @@ jobs:
         path: ./publish-api
 #        registry: docker.pkg.github.com
         registry: ghcr.io
-        repository: ${{ secrets.ORG_NAME }}/service.registration/myjetwallet.service.registration-test
+        repository: ${{ secrets.ORG_NAME }}/service.registration/service.registration-test
         tags: latest
-        build_args: app_version=myjetwallet.service.registration-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=service.registration-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
-    - name: Publish image ST
-      uses: docker/build-push-action@v1
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
       with:
-        username: ${{ secrets.ST_DOCKER_USER }}
-        password: ${{ secrets.ST_DOCKER_PASSWORD }}
-        path: ./publish-api
-        registry: simpletrading.azurecr.io
-        repository: spot/myjetwallet.service.registration-test
-        tags: latest
-        add_git_labels: true
-        build_args: app_version=myjetwallet.service.registration-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        port: ${{ secrets.PORT }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        script: cd /home/monfex/Services/Service.Registration && docker-compose pull && docker-compose up -d
 
-  restart:
-    runs-on: self-hosted   
-    needs: build
-    steps:
-    - name: Restart service
-      uses: Myjetwallet/kube-restart-pods@master
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA__ST_TEST }}
-        NAMESPACE: ${{ secrets.KUBE_TEST_NAMESPACE }}
-        POD: registration
+#    - name: Publish image Azure
+#      uses: docker/build-push-action@v1
+#      with:
+#        username: ${{ secrets.AZ_DOCKER_USER }}
+#        password: ${{ secrets.AZ_DOCKER_PASSWORD }}
+#        path: ./publish-api
+#        registry: ${{ secrets.AZ_REGISTRY }}
+#        repository: education/service.educationapi-test
+#        tags: latest
+#        add_git_labels: true
+#        build_args: app_version=service.educationapi-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
+  #restart:
+  #  runs-on: self-hosted   
+  #  needs: build
+  #  steps:
+  #  - name: Restart service
+  #    uses: Myjetwallet/kube-restart-pods@master
+  #    env:
+  #      KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA__ST_TEST }}
+  #      NAMESPACE: ${{ secrets.KUBE_TEST_NAMESPACE }}
+  #      POD: educationapi
 
