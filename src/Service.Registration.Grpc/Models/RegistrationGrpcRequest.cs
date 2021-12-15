@@ -8,7 +8,7 @@ namespace Service.Registration.Grpc.Models
 		[DataMember(Order = 1)]
 		public string UserName { get; set; }
 
-		[DataMember(Order = 1)]
+		[DataMember(Order = 2)]
 		public string Password { get; set; }
 	}
 }
