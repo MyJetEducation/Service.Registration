@@ -2,8 +2,11 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
+using Service.Core.Domain.Extensions;
 using Service.Core.Domain.Models;
 using Service.Core.Grpc.Models;
+using Service.EducationProgress.Grpc;
+using Service.EducationProgress.Grpc.Models;
 using Service.Registration.Domain.Models;
 using Service.Registration.Grpc;
 using Service.Registration.Grpc.Models;
@@ -19,13 +22,15 @@ namespace Service.Registration.Services
 		private readonly IPublisher<IRegistrationInfo> _publisher;
 		private readonly IHashCodeService<EmailHashDto> _hashCodeService;
 		private readonly IUserInfoService _userInfoService;
+		private readonly IEducationProgressService _progressService;
 
-		public RegistrationService(ILogger<RegistrationService> logger, IPublisher<IRegistrationInfo> publisher, IHashCodeService<EmailHashDto> hashCodeService, IUserInfoService userInfoService)
+		public RegistrationService(ILogger<RegistrationService> logger, IPublisher<IRegistrationInfo> publisher, IHashCodeService<EmailHashDto> hashCodeService, IUserInfoService userInfoService, IEducationProgressService progressService)
 		{
 			_logger = logger;
 			_publisher = publisher;
 			_hashCodeService = hashCodeService;
 			_userInfoService = userInfoService;
+			_progressService = progressService;
 		}
 
 		public async ValueTask<CommonGrpcResponse> RegistrationAsync(RegistrationGrpcRequest request)
@@ -78,7 +83,25 @@ namespace Service.Registration.Services
 				ActivationHash = hash
 			});
 
-			return CommonGrpcResponse.Result(response.IsSuccess);
+			bool confirmed = response.IsSuccess;
+			if (confirmed)
+				await InitUserProgress(email);
+
+			return CommonGrpcResponse.Result(confirmed);
+		}
+
+		private async Task InitUserProgress(string email)
+		{
+			UserInfoResponse userInfo = await _userInfoService.GetUserInfoByLoginAsync(new UserInfoAuthRequest {UserName = email});
+			if (userInfo == null)
+				_logger.LogError("Can't init user progress for {email}. No info for user retrieved", email.Mask());
+			else
+			{
+				CommonGrpcResponse initResponse = await _progressService.InitProgressAsync(new InitEducationProgressGrpcRequest {UserId = userInfo.UserInfo.UserId});
+				bool? initSuccess = initResponse?.IsSuccess;
+				if (initSuccess != true)
+					_logger.LogError("Can't init user progress for {email}. Init return false.", email.Mask());
+			}
 		}
 	}
 }

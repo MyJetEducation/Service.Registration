@@ -3,6 +3,7 @@ using DotNetCoreDecorators;
 using MyServiceBus.TcpClient;
 using Service.Core.Domain;
 using Service.Core.Domain.Models;
+using Service.EducationProgress.Client;
 using Service.Registration.Domain.Models;
 using Service.Registration.Models;
 using Service.Registration.Services;
@@ -18,6 +19,7 @@ namespace Service.Registration.Modules
 			builder.RegisterType<RegistrationService>().AsImplementedInterfaces().SingleInstance();
 			builder.RegisterType<SystemClock>().AsImplementedInterfaces().SingleInstance();
 			builder.RegisterType<HashCodeService<EmailHashDto>>().As<IHashCodeService<EmailHashDto>>().SingleInstance();
+			builder.RegisterEducationProgressClient(Program.Settings.EducationProgressServiceUrl);
 
 			var tcpServiceBus = new MyServiceBusTcpClient(() => Program.Settings.ServiceBusWriter, "MyJetEducation Service.Registration");
 			IPublisher<IRegistrationInfo> clientRegisterPublisher = new MyServiceBusPublisher(tcpServiceBus);
