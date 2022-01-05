@@ -8,6 +8,7 @@ using Service.Registration.Domain.Models;
 using Service.Registration.Models;
 using Service.Registration.Services;
 using Service.UserInfo.Crud.Client;
+using Service.UserProfile.Client;
 
 namespace Service.Registration.Modules
 {
@@ -20,6 +21,7 @@ namespace Service.Registration.Modules
 			builder.RegisterType<SystemClock>().AsImplementedInterfaces().SingleInstance();
 			builder.RegisterType<HashCodeService<EmailHashDto>>().As<IHashCodeService<EmailHashDto>>().SingleInstance();
 			builder.RegisterEducationProgressClient(Program.Settings.EducationProgressServiceUrl);
+			builder.RegisterUserProfileClient(Program.Settings.UserProfileServiceUrl);
 
 			var tcpServiceBus = new MyServiceBusTcpClient(() => Program.Settings.ServiceBusWriter, "MyJetEducation Service.Registration");
 			IPublisher<IRegistrationInfo> clientRegisterPublisher = new MyServiceBusPublisher(tcpServiceBus);

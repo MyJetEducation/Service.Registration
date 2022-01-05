@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DotNetCoreDecorators;
@@ -13,6 +14,8 @@ using Service.Registration.Grpc.Models;
 using Service.Registration.Models;
 using Service.UserInfo.Crud.Grpc;
 using Service.UserInfo.Crud.Grpc.Models;
+using Service.UserProfile.Grpc;
+using Service.UserProfile.Grpc.Models;
 
 namespace Service.Registration.Services
 {
@@ -23,14 +26,21 @@ namespace Service.Registration.Services
 		private readonly IHashCodeService<EmailHashDto> _hashCodeService;
 		private readonly IUserInfoService _userInfoService;
 		private readonly IEducationProgressService _progressService;
+		private readonly IUserProfileService _userProfileService;
 
-		public RegistrationService(ILogger<RegistrationService> logger, IPublisher<IRegistrationInfo> publisher, IHashCodeService<EmailHashDto> hashCodeService, IUserInfoService userInfoService, IEducationProgressService progressService)
+		public RegistrationService(ILogger<RegistrationService> logger,
+			IPublisher<IRegistrationInfo> publisher,
+			IHashCodeService<EmailHashDto> hashCodeService,
+			IUserInfoService userInfoService,
+			IEducationProgressService progressService,
+			IUserProfileService userProfileService)
 		{
 			_logger = logger;
 			_publisher = publisher;
 			_hashCodeService = hashCodeService;
 			_userInfoService = userInfoService;
 			_progressService = progressService;
+			_userProfileService = userProfileService;
 		}
 
 		public async ValueTask<CommonGrpcResponse> RegistrationAsync(RegistrationGrpcRequest request)
@@ -41,6 +51,21 @@ namespace Service.Registration.Services
 			if (hash == null)
 				return CommonGrpcResponse.Fail;
 
+			UserIdResponse userIdResponse = await CreateUserInfo(request, hash);
+
+			Guid? userId = userIdResponse.UserId;
+			if (userId == null)
+				return CommonGrpcResponse.Fail;
+
+			await SaveUserAccount(request.FullName, userId);
+
+			await PublishToServiceBus(email, hash);
+
+			return CommonGrpcResponse.Success;
+		}
+
+		private async Task<UserIdResponse> CreateUserInfo(RegistrationGrpcRequest request, string hash)
+		{
 			var userInfoRegisterRequest = new UserInfoRegisterRequest
 			{
 				UserName = request.UserName,
@@ -50,11 +75,32 @@ namespace Service.Registration.Services
 
 			_logger.LogDebug($"Create user info: {JsonSerializer.Serialize(userInfoRegisterRequest)}");
 
-			CommonGrpcResponse createResponse = await _userInfoService.CreateUserInfoAsync(userInfoRegisterRequest);
+			return await _userInfoService.CreateUserInfoAsync(userInfoRegisterRequest);
+		}
 
-			if (!createResponse.IsSuccess)
-				return CommonGrpcResponse.Fail;
+		private async Task SaveUserAccount(string fullName, Guid? userId)
+		{
+			string[] nameParts = fullName.Split(" ");
+			if (nameParts.Length != 2)
+			{
+				_logger.LogError($"Can't save account for userId: {userId}, invalid fullname: {fullName}.");
+				return;
+			}
 
+			var saveAccountGrpcRequest = new SaveAccountGrpcRequest
+			{
+				UserId = userId,
+				FirstName = nameParts[0],
+				LastName = nameParts[1]
+			};
+
+			_logger.LogDebug($"Saving account for user : {JsonSerializer.Serialize(saveAccountGrpcRequest)}");
+
+			await _userProfileService.SaveAccount(saveAccountGrpcRequest);
+		}
+
+		private async Task PublishToServiceBus(string email, string hash)
+		{
 			var recoveryInfoServiceBusModel = new RegistrationInfoServiceBusModel
 			{
 				Email = email,
@@ -64,8 +110,6 @@ namespace Service.Registration.Services
 			_logger.LogDebug($"Publish into to service bus: {JsonSerializer.Serialize(recoveryInfoServiceBusModel)}");
 
 			await _publisher.PublishAsync(recoveryInfoServiceBusModel);
-
-			return CommonGrpcResponse.Success;
 		}
 
 		public async ValueTask<CommonGrpcResponse> ConfirmRegistrationAsync(ConfirmRegistrationGrpcRequest request)

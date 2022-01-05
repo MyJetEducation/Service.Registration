@@ -22,5 +22,8 @@ namespace Service.Registration.Settings
 
         [YamlProperty("Registration.EducationProgressServiceUrl")]
         public string EducationProgressServiceUrl { get; set; }
+
+        [YamlProperty("Registration.UserProfileServiceUrl")]
+        public string UserProfileServiceUrl { get; set; }
     }
 }

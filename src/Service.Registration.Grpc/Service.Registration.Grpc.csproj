@@ -5,15 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MyJetEducation.Service.Core.Client" Version="1.0.8" />
-    <PackageReference Include="MyJetWallet.Service.AuditLog.Client" Version="1.1.0" />
-    <PackageReference Include="MyJetWallet.Service.Authorization.Client" Version="2.1.0" />
-    <PackageReference Include="MyJetWallet.Service.PersonalData.Client" Version="1.1.0" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Service.Registration.Domain.Models\Service.Registration.Domain.Models.csproj" />
+    <PackageReference Include="MyJetEducation.Service.Core.Client" Version="1.0.10" />
   </ItemGroup>
 
   <ItemGroup>
