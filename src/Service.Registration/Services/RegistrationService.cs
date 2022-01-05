@@ -112,13 +112,14 @@ namespace Service.Registration.Services
 			await _publisher.PublishAsync(recoveryInfoServiceBusModel);
 		}
 
-		public async ValueTask<CommonGrpcResponse> ConfirmRegistrationAsync(ConfirmRegistrationGrpcRequest request)
+		public async ValueTask<ConfirmRegistrationGrpcResponse> ConfirmRegistrationAsync(ConfirmRegistrationGrpcRequest request)
 		{
+			var result = new ConfirmRegistrationGrpcResponse();
 			string hash = request.Hash;
 
 			string email = _hashCodeService.Get(hash)?.Email;
 			if (email == null)
-				return CommonGrpcResponse.Fail;
+				return result;
 
 			_logger.LogDebug("Confirm user registration for {email} with hash: {hash}.", email, hash);
 
@@ -131,7 +132,7 @@ namespace Service.Registration.Services
 			if (confirmed)
 				await InitUserProgress(email);
 
-			return CommonGrpcResponse.Result(confirmed);
+			return new ConfirmRegistrationGrpcResponse {Email = email};
 		}
 
 		private async Task InitUserProgress(string email)

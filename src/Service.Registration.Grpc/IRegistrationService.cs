@@ -12,6 +12,6 @@ namespace Service.Registration.Grpc
 		ValueTask<CommonGrpcResponse> RegistrationAsync(RegistrationGrpcRequest request);
 
 		[OperationContract]
-		ValueTask<CommonGrpcResponse> ConfirmRegistrationAsync(ConfirmRegistrationGrpcRequest request);
+		ValueTask<ConfirmRegistrationGrpcResponse> ConfirmRegistrationAsync(ConfirmRegistrationGrpcRequest request);
 	}
 }
