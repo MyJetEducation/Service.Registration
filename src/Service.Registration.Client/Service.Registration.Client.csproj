@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Service.Registration.Domain.Models\Service.Registration.Domain.Models.csproj" />
     <ProjectReference PrivateAssets="All" Include="..\Service.Registration.Grpc\Service.Registration.Grpc.csproj" />
   </ItemGroup>
 
