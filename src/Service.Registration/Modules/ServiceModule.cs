@@ -24,7 +24,7 @@ namespace Service.Registration.Modules
 			builder.RegisterUserProfileClient(Program.Settings.UserProfileServiceUrl);
 
 			var tcpServiceBus = new MyServiceBusTcpClient(() => Program.Settings.ServiceBusWriter, "MyJetEducation Service.Registration");
-			IPublisher<IRegistrationInfo> clientRegisterPublisher = new MyServiceBusPublisher(tcpServiceBus);
+			IPublisher<RegistrationInfoServiceBusModel> clientRegisterPublisher = new MyServiceBusPublisher(tcpServiceBus);
 			builder.Register(context => clientRegisterPublisher);
 			tcpServiceBus.Start();
 		}

@@ -3,7 +3,7 @@
 namespace Service.Registration.Domain.Models
 {
 	[DataContract]
-	public class RegistrationInfoServiceBusModel : IRegistrationInfo
+	public class RegistrationInfoServiceBusModel
 	{
 		public const string TopicName = "myjeteducation-registration-confirm";
 

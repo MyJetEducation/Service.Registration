@@ -6,7 +6,7 @@ using Service.Registration.Domain.Models;
 
 namespace Service.Registration.Services
 {
-	public class MyServiceBusPublisher : IPublisher<IRegistrationInfo>
+	public class MyServiceBusPublisher : IPublisher<RegistrationInfoServiceBusModel>
 	{
 		private readonly MyServiceBusTcpClient _client;
 
@@ -16,15 +16,9 @@ namespace Service.Registration.Services
 			_client.CreateTopicIfNotExists(RegistrationInfoServiceBusModel.TopicName);
 		}
 
-		public ValueTask PublishAsync(IRegistrationInfo valueToPublish)
+		public ValueTask PublishAsync(RegistrationInfoServiceBusModel valueToPublish)
 		{
-			var serviceBusModel = new RegistrationInfoServiceBusModel
-			{
-				Email = valueToPublish.Email,
-				Hash = valueToPublish.Hash
-			};
-
-			byte[] bytesToSend = serviceBusModel.ServiceBusContractToByteArray();
+			byte[] bytesToSend = valueToPublish.ServiceBusContractToByteArray();
 
 			Task task = _client.PublishAsync(RegistrationInfoServiceBusModel.TopicName, bytesToSend, false);
 

@@ -22,14 +22,14 @@ namespace Service.Registration.Services
 	public class RegistrationService : IRegistrationService
 	{
 		private readonly ILogger<RegistrationService> _logger;
-		private readonly IPublisher<IRegistrationInfo> _publisher;
+		private readonly IPublisher<RegistrationInfoServiceBusModel> _publisher;
 		private readonly IHashCodeService<EmailHashDto> _hashCodeService;
 		private readonly IUserInfoService _userInfoService;
 		private readonly IEducationProgressService _progressService;
 		private readonly IUserProfileService _userProfileService;
 
 		public RegistrationService(ILogger<RegistrationService> logger,
-			IPublisher<IRegistrationInfo> publisher,
+			IPublisher<RegistrationInfoServiceBusModel> publisher,
 			IHashCodeService<EmailHashDto> hashCodeService,
 			IUserInfoService userInfoService,
 			IEducationProgressService progressService,
