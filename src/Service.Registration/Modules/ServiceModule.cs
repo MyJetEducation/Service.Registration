@@ -1,8 +1,7 @@
 ﻿using Autofac;
 using DotNetCoreDecorators;
 using MyServiceBus.TcpClient;
-using Service.Core.Domain;
-using Service.Core.Domain.Models;
+using Service.Core.Client.Services;
 using Service.EducationProgress.Client;
 using Service.Registration.Domain.Models;
 using Service.Registration.Models;
