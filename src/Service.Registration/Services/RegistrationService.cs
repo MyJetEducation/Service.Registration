@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using Service.Core.Client.Extensions;
 using Service.Core.Client.Models;
@@ -11,7 +12,6 @@ using Service.Registration.Grpc;
 using Service.Registration.Grpc.Models;
 using Service.Registration.Models;
 using Service.ServiceBus.Models;
-using Service.ServiceBus.Services;
 using Service.UserInfo.Crud.Grpc;
 using Service.UserInfo.Crud.Grpc.Models;
 using Service.UserProfile.Grpc;
@@ -22,14 +22,14 @@ namespace Service.Registration.Services
 	public class RegistrationService : IRegistrationService
 	{
 		private readonly ILogger<RegistrationService> _logger;
-		private readonly IServiceBusPublisher<RegistrationInfoServiceBusModel> _publisher;
+		private readonly IPublisher<RegistrationInfoServiceBusModel> _publisher;
 		private readonly IHashCodeService<EmailHashDto> _hashCodeService;
 		private readonly IUserInfoService _userInfoService;
 		private readonly IEducationProgressService _progressService;
 		private readonly IUserProfileService _userProfileService;
 
 		public RegistrationService(ILogger<RegistrationService> logger,
-			IServiceBusPublisher<RegistrationInfoServiceBusModel> publisher,
+			IPublisher<RegistrationInfoServiceBusModel> publisher,
 			IHashCodeService<EmailHashDto> hashCodeService,
 			IUserInfoService userInfoService,
 			IEducationProgressService progressService,
