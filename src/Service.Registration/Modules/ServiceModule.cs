@@ -27,7 +27,7 @@ namespace Service.Registration.Modules
 			var tcpServiceBus = new MyServiceBusTcpClient(() => Program.Settings.ServiceBusWriter, "MyJetEducation Service.Registration");
 
 			builder
-				.RegisterInstance(new MyServiceBusPublisher<RegistrationInfoServiceBusModel>(tcpServiceBus, RegistrationInfoServiceBusModel.TopicName, false))
+				.Register(context => new MyServiceBusPublisher<RegistrationInfoServiceBusModel>(tcpServiceBus, RegistrationInfoServiceBusModel.TopicName, false))
 				.As<IServiceBusPublisher<RegistrationInfoServiceBusModel>>()
 				.SingleInstance();
 
