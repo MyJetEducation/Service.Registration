@@ -1,11 +1,10 @@
 ﻿using Autofac;
-using MyJetWallet.Sdk.ServiceBus;
-using MyServiceBus.TcpClient;
 using Service.Core.Client.Services;
 using Service.EducationProgress.Client;
 using Service.Registration.Models;
 using Service.Registration.Services;
 using Service.ServiceBus.Models;
+using Service.ServiceBus.Services;
 using Service.UserInfo.Crud.Client;
 using Service.UserProfile.Client;
 
@@ -23,12 +22,7 @@ namespace Service.Registration.Modules
 			builder.RegisterEducationProgressClient(Program.Settings.EducationProgressServiceUrl);
 			builder.RegisterUserProfileClient(Program.Settings.UserProfileServiceUrl);
 
-			MyServiceBusTcpClient tcpServiceBus = builder.RegisterMyServiceBusTcpClient(Program.ReloadedSettings(e => e.ServiceBusWriter), Program.LogFactory);
-			builder
-				.RegisterInstance(new MyServiceBusPublisher<RegistrationInfoServiceBusModel>(tcpServiceBus, RegistrationInfoServiceBusModel.TopicName, false))
-				.As<IServiceBusPublisher<RegistrationInfoServiceBusModel>>()
-				.SingleInstance();
-			tcpServiceBus.Start();
+			builder.RegisterServiceBusClient<RegistrationInfoServiceBusModel>(Program.ReloadedSettings(e => e.ServiceBusWriter), RegistrationInfoServiceBusModel.TopicName, Program.LogFactory);
 		}
 	}
 }
