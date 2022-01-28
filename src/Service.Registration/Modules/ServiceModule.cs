@@ -1,4 +1,6 @@
 ﻿using Autofac;
+using DotNetCoreDecorators;
+using MyServiceBus.TcpClient;
 using Service.Core.Client.Services;
 using Service.EducationProgress.Client;
 using Service.Registration.Models;
@@ -22,7 +24,12 @@ namespace Service.Registration.Modules
 			builder.RegisterEducationProgressClient(Program.Settings.EducationProgressServiceUrl);
 			builder.RegisterUserProfileClient(Program.Settings.UserProfileServiceUrl);
 
-			builder.RegisterServiceBusClient<RegistrationInfoServiceBusModel>(Program.ReloadedSettings(e => e.ServiceBusWriter), RegistrationInfoServiceBusModel.TopicName, Program.LogFactory);
+			MyServiceBusTcpClient tcpServiceBus = builder.RegisterServiceBusClient(Program.ReloadedSettings(e => e.ServiceBusWriter), Program.LogFactory);
+
+			builder
+				.RegisterInstance(new ServiceBusPublisher<RegistrationInfoServiceBusModel>(tcpServiceBus, RegistrationInfoServiceBusModel.TopicName, false))
+				.As<IPublisher<RegistrationInfoServiceBusModel>>()
+				.SingleInstance();
 		}
 	}
 }
