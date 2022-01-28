@@ -30,6 +30,8 @@ namespace Service.Registration.Modules
 				.RegisterInstance(new ServiceBusPublisher<RegistrationInfoServiceBusModel>(tcpServiceBus, RegistrationInfoServiceBusModel.TopicName, false))
 				.As<IPublisher<RegistrationInfoServiceBusModel>>()
 				.SingleInstance();
+
+			tcpServiceBus.Start();
 		}
 	}
 }
