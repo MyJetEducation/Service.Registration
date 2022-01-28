@@ -1,8 +1,8 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.ServiceBus;
 using Service.Core.Client.Extensions;
 using Service.Core.Client.Models;
 using Service.Core.Client.Services;
@@ -22,14 +22,14 @@ namespace Service.Registration.Services
 	public class RegistrationService : IRegistrationService
 	{
 		private readonly ILogger<RegistrationService> _logger;
-		private readonly IPublisher<RegistrationInfoServiceBusModel> _publisher;
+		private readonly IServiceBusPublisher<RegistrationInfoServiceBusModel> _publisher;
 		private readonly IHashCodeService<EmailHashDto> _hashCodeService;
 		private readonly IUserInfoService _userInfoService;
 		private readonly IEducationProgressService _progressService;
 		private readonly IUserProfileService _userProfileService;
 
 		public RegistrationService(ILogger<RegistrationService> logger,
-			IPublisher<RegistrationInfoServiceBusModel> publisher,
+			IServiceBusPublisher<RegistrationInfoServiceBusModel> publisher,
 			IHashCodeService<EmailHashDto> hashCodeService,
 			IUserInfoService userInfoService,
 			IEducationProgressService progressService,
