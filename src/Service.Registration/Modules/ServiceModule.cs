@@ -28,7 +28,7 @@ namespace Service.Registration.Modules
 
 			builder
 				.RegisterInstance(new MyServiceBusPublisher<RegistrationInfoServiceBusModel>(tcpServiceBus, RegistrationInfoServiceBusModel.TopicName, false))
-				.As<IPublisher<RegistrationInfoServiceBusModel>>()
+				.As<IServiceBusPublisher<RegistrationInfoServiceBusModel>>()
 				.SingleInstance();
 
 			tcpServiceBus.Start();
