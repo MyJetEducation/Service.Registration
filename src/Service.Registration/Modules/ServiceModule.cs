@@ -24,7 +24,11 @@ namespace Service.Registration.Modules
 			builder.RegisterUserProfileClient(Program.Settings.UserProfileServiceUrl);
 
 			MyServiceBusTcpClient tcpServiceBus = builder.RegisterMyServiceBusTcpClient(Program.ReloadedSettings(e => e.ServiceBusWriter), Program.LogFactory);
-			builder.RegisterMyServiceBusPublisher<RegistrationInfoServiceBusModel>(tcpServiceBus, RegistrationInfoServiceBusModel.TopicName, false);
+			builder
+				.RegisterInstance(new MyServiceBusPublisher<RegistrationInfoServiceBusModel>(tcpServiceBus, RegistrationInfoServiceBusModel.TopicName, false))
+				.As<IServiceBusPublisher<RegistrationInfoServiceBusModel>>()
+				.SingleInstance();
+			tcpServiceBus.Start();
 		}
 	}
 }
