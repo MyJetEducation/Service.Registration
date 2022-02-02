@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using DotNetCoreDecorators;
 using MyJetWallet.Sdk.ServiceBus;
 using MyServiceBus.TcpClient;
 using Service.Core.Client.Services;

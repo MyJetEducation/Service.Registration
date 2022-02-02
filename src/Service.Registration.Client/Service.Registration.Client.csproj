@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.3.0" />
+    <PackageReference Include="MyJetWallet.Sdk.Grpc" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference PrivateAssets="All" Include="..\Service.Registration.Domain.Models\Service.Registration.Domain.Models.csproj" />
     <ProjectReference PrivateAssets="All" Include="..\Service.Registration.Grpc\Service.Registration.Grpc.csproj" />
   </ItemGroup>
