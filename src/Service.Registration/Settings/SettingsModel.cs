@@ -25,5 +25,8 @@ namespace Service.Registration.Settings
 
         [YamlProperty("Registration.UserProfileServiceUrl")]
         public string UserProfileServiceUrl { get; set; }
+
+        [YamlProperty("Registration.HashStoreTimeoutMinutes")]
+        public int HashStoreTimeoutMinutes { get; set; }
     }
 }

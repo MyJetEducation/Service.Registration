@@ -37,15 +37,19 @@ namespace Service.Registration.Services
 		{
 			_logger = logger;
 			_publisher = publisher;
-			_hashCodeService = hashCodeService;
 			_userInfoService = userInfoService;
 			_progressService = progressService;
 			_userProfileService = userProfileService;
+
+			_hashCodeService = hashCodeService;
+			_hashCodeService.SetTimeOut(Program.ReloadedSettings(model => model.HashStoreTimeoutMinutes).Invoke());
 		}
 
 		public async ValueTask<CommonGrpcResponse> RegistrationAsync(RegistrationGrpcRequest request)
 		{
 			string email = request.UserName;
+			if (_hashCodeService.Contains(dto => dto.Email == email))
+				return CommonGrpcResponse.Success;
 
 			string hash = _hashCodeService.New(new EmailHashDto(email));
 			if (hash == null)
@@ -83,7 +87,7 @@ namespace Service.Registration.Services
 			string[] nameParts = fullName.Split(" ");
 			if (nameParts.Length != 2)
 			{
-				_logger.LogError($"Can't save account for userId: {userId}, invalid fullname: {fullName}.");
+				_logger.LogError("Can't save account for userId: {userId}, invalid fullname: {fullName}.", userId, fullName);
 				return;
 			}
 
