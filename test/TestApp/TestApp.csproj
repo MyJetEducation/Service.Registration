@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Service.Registration.Client\Service.Registration.Client.csproj" />
     <ProjectReference Include="..\..\src\Service.Registration.Grpc\Service.Registration.Grpc.csproj" />
+    <PackageReference Include="protobuf-net.Grpc" Version="1.0.152" />
   </ItemGroup>
 
 </Project>
