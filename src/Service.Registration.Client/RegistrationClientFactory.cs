@@ -1,16 +1,17 @@
 ﻿using JetBrains.Annotations;
-using MyJetWallet.Sdk.Grpc;
+using Microsoft.Extensions.Logging;
+using Service.Grpc;
 using Service.Registration.Grpc;
 
 namespace Service.Registration.Client
 {
     [UsedImplicitly]
-    public class RegistrationClientFactory: MyGrpcClientFactory
+    public class RegistrationClientFactory: GrpcClientFactory
     {
-        public RegistrationClientFactory(string grpcServiceUrl) : base(grpcServiceUrl)
+        public RegistrationClientFactory(string grpcServiceUrl, ILogger logger) : base(grpcServiceUrl, logger)
         {
         }
 
-        public IRegistrationService GetRegistrationService() => CreateGrpcService<IRegistrationService>();
+        public IGrpcServiceProxy<IRegistrationService> GetRegistrationService() => CreateGrpcService<IRegistrationService>();
     }
 }
