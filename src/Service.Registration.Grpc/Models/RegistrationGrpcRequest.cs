@@ -12,6 +12,9 @@ namespace Service.Registration.Grpc.Models
 		public string Password { get; set; }
 
 		[DataMember(Order = 3)]
-		public string FullName { get; set; }
+		public string FirstName { get; set; }
+
+		[DataMember(Order = 4)]
+		public string LastName { get; set; }
 	}
 }

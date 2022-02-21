@@ -61,11 +61,11 @@ namespace Service.Registration.Services
 			if (userId == null)
 				return CommonGrpcResponse.Fail;
 
-			await SaveUserAccount(request.FullName, userId);
-
 			await PublishToServiceBus(email, hash);
 
-			return CommonGrpcResponse.Success;
+			bool userAccountSaveResponse = await SaveUserAccount(request, userId);
+
+			return CommonGrpcResponse.Result(userAccountSaveResponse);
 		}
 
 		private async Task<UserIdResponse> CreateUserInfo(RegistrationGrpcRequest request, string hash)
@@ -82,25 +82,22 @@ namespace Service.Registration.Services
 			return await _userInfoService.CreateUserInfoAsync(userInfoRegisterRequest);
 		}
 
-		private async Task SaveUserAccount(string fullName, Guid? userId)
+		private async ValueTask<bool> SaveUserAccount(RegistrationGrpcRequest request, Guid? userId)
 		{
-			string[] nameParts = fullName.Split(" ");
-			if (nameParts.Length != 2)
-			{
-				_logger.LogError("Can't save account for userId: {userId}, invalid fullname: {fullName}.", userId, fullName);
-				return;
-			}
-
 			var saveAccountGrpcRequest = new SaveAccountGrpcRequest
 			{
 				UserId = userId,
-				FirstName = nameParts[0],
-				LastName = nameParts[1]
+				FirstName = request.FirstName,
+				LastName = request.LastName
 			};
 
 			_logger.LogDebug($"Saving account for user : {JsonSerializer.Serialize(saveAccountGrpcRequest)}");
 
-			await _userProfileService.SaveAccount(saveAccountGrpcRequest);
+			CommonGrpcResponse response = await _userProfileService.SaveAccount(saveAccountGrpcRequest);
+			if (!response.IsSuccess)
+				_logger.LogError("Can't save user account info for {email}.", request.UserName.Mask());
+
+			return response.IsSuccess;
 		}
 
 		private async Task PublishToServiceBus(string email, string hash)
@@ -125,7 +122,7 @@ namespace Service.Registration.Services
 			if (email == null)
 				return result;
 
-			_logger.LogDebug("Confirm user registration for {email} with hash: {hash}.", email, hash);
+			_logger.LogDebug("Confirm user registration for {email} with hash: {hash}.", email.Mask(), hash);
 
 			CommonGrpcResponse response = await _userInfoService.ConfirmUserInfoAsync(new UserInfoConfirmRequest
 			{
@@ -135,6 +132,8 @@ namespace Service.Registration.Services
 			bool confirmed = response.IsSuccess;
 			if (confirmed)
 				await InitUserProgress(email);
+			else
+				_logger.LogError("Can't confirm user registration for {email}.", email.Mask());
 
 			return new ConfirmRegistrationGrpcResponse {Email = email};
 		}
