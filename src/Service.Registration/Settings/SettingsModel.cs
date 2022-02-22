@@ -23,8 +23,8 @@ namespace Service.Registration.Settings
         [YamlProperty("Registration.EducationProgressServiceUrl")]
         public string EducationProgressServiceUrl { get; set; }
 
-        [YamlProperty("Registration.UserProfileServiceUrl")]
-        public string UserProfileServiceUrl { get; set; }
+        [YamlProperty("Registration.UserAccountServiceUrl")]
+        public string UserAccountServiceUrl { get; set; }
 
         [YamlProperty("Registration.HashStoreTimeoutMinutes")]
         public int HashStoreTimeoutMinutes { get; set; }

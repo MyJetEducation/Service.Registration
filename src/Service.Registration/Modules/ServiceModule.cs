@@ -7,8 +7,8 @@ using Service.EducationProgress.Client;
 using Service.Registration.Models;
 using Service.Registration.Services;
 using Service.ServiceBus.Models;
+using Service.UserAccount.Client;
 using Service.UserInfo.Crud.Client;
-using Service.UserProfile.Client;
 
 namespace Service.Registration.Modules
 {
@@ -21,8 +21,9 @@ namespace Service.Registration.Modules
 			builder.RegisterType<HashCodeService<EmailHashDto>>().As<IHashCodeService<EmailHashDto>>().SingleInstance();
 
 			builder.RegisterUserInfoCrudClient(Program.Settings.UserInfoCrudServiceUrl, Program.LogFactory.CreateLogger(typeof(UserInfoCrudClientFactory)));
+			builder.RegisterUserAccountClient(Program.Settings.UserAccountServiceUrl, Program.LogFactory.CreateLogger(typeof(UserAccountClientFactory)));
+
 			builder.RegisterEducationProgressClient(Program.Settings.EducationProgressServiceUrl);
-			builder.RegisterUserProfileClient(Program.Settings.UserProfileServiceUrl);
 
 			var tcpServiceBus = new MyServiceBusTcpClient(() => Program.Settings.ServiceBusWriter, "MyJetEducation Service.Registration");
 

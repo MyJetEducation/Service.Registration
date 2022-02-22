@@ -13,10 +13,10 @@ using Service.Registration.Grpc;
 using Service.Registration.Grpc.Models;
 using Service.Registration.Models;
 using Service.ServiceBus.Models;
+using Service.UserAccount.Grpc;
+using Service.UserAccount.Grpc.Models;
 using Service.UserInfo.Crud.Grpc;
 using Service.UserInfo.Crud.Grpc.Models;
-using Service.UserProfile.Grpc;
-using Service.UserProfile.Grpc.Models;
 
 namespace Service.Registration.Services
 {
@@ -27,14 +27,14 @@ namespace Service.Registration.Services
 		private readonly IHashCodeService<EmailHashDto> _hashCodeService;
 		private readonly IGrpcServiceProxy<IUserInfoService> _userInfoService;
 		private readonly IEducationProgressService _progressService;
-		private readonly IUserProfileService _userProfileService;
+		private readonly IGrpcServiceProxy<IUserAccountService> _userProfileService;
 
 		public RegistrationService(ILogger<RegistrationService> logger,
 			IServiceBusPublisher<RegistrationInfoServiceBusModel> publisher,
 			IHashCodeService<EmailHashDto> hashCodeService,
 			IGrpcServiceProxy<IUserInfoService> userInfoService,
 			IEducationProgressService progressService,
-			IUserProfileService userProfileService)
+			IGrpcServiceProxy<IUserAccountService> userProfileService)
 		{
 			_logger = logger;
 			_publisher = publisher;
@@ -94,7 +94,7 @@ namespace Service.Registration.Services
 
 			_logger.LogDebug($"Saving account for user : {JsonSerializer.Serialize(saveAccountGrpcRequest)}");
 
-			CommonGrpcResponse response = await _userProfileService.SaveAccount(saveAccountGrpcRequest);
+			CommonGrpcResponse response = await _userProfileService.TryCall(service => service.SaveAccount(saveAccountGrpcRequest));
 			if (!response.IsSuccess)
 				_logger.LogError("Can't save user account info for {email}.", request.UserName.Mask());
 
