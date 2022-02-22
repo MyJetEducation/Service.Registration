@@ -8,6 +8,7 @@ using Service.Core.Client.Models;
 using Service.Core.Client.Services;
 using Service.EducationProgress.Grpc;
 using Service.EducationProgress.Grpc.Models;
+using Service.Grpc;
 using Service.Registration.Grpc;
 using Service.Registration.Grpc.Models;
 using Service.Registration.Models;
@@ -24,14 +25,14 @@ namespace Service.Registration.Services
 		private readonly ILogger<RegistrationService> _logger;
 		private readonly IServiceBusPublisher<RegistrationInfoServiceBusModel> _publisher;
 		private readonly IHashCodeService<EmailHashDto> _hashCodeService;
-		private readonly IUserInfoService _userInfoService;
+		private readonly IGrpcServiceProxy<IUserInfoService> _userInfoService;
 		private readonly IEducationProgressService _progressService;
 		private readonly IUserProfileService _userProfileService;
 
 		public RegistrationService(ILogger<RegistrationService> logger,
 			IServiceBusPublisher<RegistrationInfoServiceBusModel> publisher,
 			IHashCodeService<EmailHashDto> hashCodeService,
-			IUserInfoService userInfoService,
+			IGrpcServiceProxy<IUserInfoService> userInfoService,
 			IEducationProgressService progressService,
 			IUserProfileService userProfileService)
 		{
@@ -79,7 +80,7 @@ namespace Service.Registration.Services
 
 			_logger.LogDebug($"Create user info: {JsonSerializer.Serialize(userInfoRegisterRequest)}");
 
-			return await _userInfoService.CreateUserInfoAsync(userInfoRegisterRequest);
+			return await _userInfoService.TryCall(service => service.CreateUserInfoAsync(userInfoRegisterRequest));
 		}
 
 		private async ValueTask<bool> SaveUserAccount(RegistrationGrpcRequest request, Guid? userId)
@@ -124,10 +125,10 @@ namespace Service.Registration.Services
 
 			_logger.LogDebug("Confirm user registration for {email} with hash: {hash}.", email.Mask(), hash);
 
-			CommonGrpcResponse response = await _userInfoService.ConfirmUserInfoAsync(new UserInfoConfirmRequest
+			CommonGrpcResponse response = await _userInfoService.TryCall(service => service.ConfirmUserInfoAsync(new UserInfoConfirmRequest
 			{
 				ActivationHash = hash
-			});
+			}));
 
 			bool confirmed = response.IsSuccess;
 			if (confirmed)
@@ -140,7 +141,7 @@ namespace Service.Registration.Services
 
 		private async Task InitUserProgress(string email)
 		{
-			UserInfoResponse userInfo = await _userInfoService.GetUserInfoByLoginAsync(new UserInfoAuthRequest {UserName = email});
+			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByLoginAsync(new UserInfoAuthRequest {UserName = email});
 			if (userInfo == null)
 				_logger.LogError("Can't init user progress for {email}. No info for user retrieved", email.Mask());
 			else

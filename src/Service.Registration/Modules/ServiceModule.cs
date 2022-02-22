@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.ServiceBus;
 using MyServiceBus.TcpClient;
 using Service.Core.Client.Services;
@@ -19,7 +20,7 @@ namespace Service.Registration.Modules
 			builder.RegisterType<SystemClock>().AsImplementedInterfaces().SingleInstance();
 			builder.RegisterType<HashCodeService<EmailHashDto>>().As<IHashCodeService<EmailHashDto>>().SingleInstance();
 
-			builder.RegisterUserInfoCrudClient(Program.Settings.UserInfoCrudServiceUrl);
+			builder.RegisterUserInfoCrudClient(Program.Settings.UserInfoCrudServiceUrl, Program.LogFactory.CreateLogger(typeof(UserInfoCrudClientFactory)));
 			builder.RegisterEducationProgressClient(Program.Settings.EducationProgressServiceUrl);
 			builder.RegisterUserProfileClient(Program.Settings.UserProfileServiceUrl);
 
