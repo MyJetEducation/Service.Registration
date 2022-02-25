@@ -24,58 +24,66 @@ namespace Service.Registration.Services
 	{
 		private readonly ILogger<RegistrationService> _logger;
 		private readonly IServiceBusPublisher<RegistrationInfoServiceBusModel> _publisher;
-		private readonly IHashCodeService<EmailHashDto> _hashCodeService;
 		private readonly IGrpcServiceProxy<IUserInfoService> _userInfoService;
 		private readonly IEducationProgressService _progressService;
 		private readonly IGrpcServiceProxy<IUserAccountService> _userProfileService;
+		private readonly IEncoderDecoder _encoderDecoder;
+		private readonly ISystemClock _systemClock;
 
 		public RegistrationService(ILogger<RegistrationService> logger,
 			IServiceBusPublisher<RegistrationInfoServiceBusModel> publisher,
-			IHashCodeService<EmailHashDto> hashCodeService,
 			IGrpcServiceProxy<IUserInfoService> userInfoService,
 			IEducationProgressService progressService,
-			IGrpcServiceProxy<IUserAccountService> userProfileService)
+			IGrpcServiceProxy<IUserAccountService> userProfileService, 
+			IEncoderDecoder encoderDecoder, 
+			ISystemClock systemClock)
 		{
 			_logger = logger;
 			_publisher = publisher;
 			_userInfoService = userInfoService;
 			_progressService = progressService;
 			_userProfileService = userProfileService;
-
-			_hashCodeService = hashCodeService;
-			_hashCodeService.SetTimeOut(Program.ReloadedSettings(model => model.HashStoreTimeoutMinutes).Invoke());
+			_encoderDecoder = encoderDecoder;
+			_systemClock = systemClock;
 		}
 
 		public async ValueTask<CommonGrpcResponse> RegistrationAsync(RegistrationGrpcRequest request)
 		{
-			string email = request.UserName;
-			if (_hashCodeService.Contains(dto => dto.Email == email))
-				return CommonGrpcResponse.Success;
-
-			string hash = _hashCodeService.New(new EmailHashDto(email));
-			if (hash == null)
-				return CommonGrpcResponse.Fail;
-
-			UserIdResponse userIdResponse = await CreateUserInfo(request, hash);
-
+			UserIdResponse userIdResponse = await CreateUserInfo(request);
 			Guid? userId = userIdResponse.UserId;
 			if (userId == null)
 				return CommonGrpcResponse.Fail;
 
-			await PublishToServiceBus(email, hash);
-
 			bool userAccountSaveResponse = await SaveUserAccount(request, userId);
+			if (!userAccountSaveResponse)
+				return CommonGrpcResponse.Fail;
 
-			return CommonGrpcResponse.Result(userAccountSaveResponse);
+			string userName = request.UserName;
+
+			string hash = GenerateRegistrationToken(userId);
+
+			await PublishToServiceBus(userName, hash);
+			
+			return CommonGrpcResponse.Success;
 		}
 
-		private async Task<UserIdResponse> CreateUserInfo(RegistrationGrpcRequest request, string hash)
+		private string GenerateRegistrationToken(Guid? userId)
+		{
+			int timeout = Program.ReloadedSettings(model => model.RegistrationTokenExpireMinutes).Invoke();
+
+			return _encoderDecoder.EncodeProto(new RegistrationTokenInfo
+			{
+				RegistrationUserId = userId,
+				RegistrationTokenExpires = _systemClock.Now.AddMinutes(timeout)
+			});
+		}
+
+		private async Task<UserIdResponse> CreateUserInfo(RegistrationGrpcRequest request)
 		{
 			var userInfoRegisterRequest = new UserInfoRegisterRequest
 			{
 				UserName = request.UserName,
-				Password = request.Password,
-				ActivationHash = hash
+				Password = request.Password
 			};
 
 			_logger.LogDebug($"Create user info: {JsonSerializer.Serialize(userInfoRegisterRequest)}");
@@ -117,40 +125,62 @@ namespace Service.Registration.Services
 		public async ValueTask<ConfirmRegistrationGrpcResponse> ConfirmRegistrationAsync(ConfirmRegistrationGrpcRequest request)
 		{
 			var result = new ConfirmRegistrationGrpcResponse();
-			string hash = request.Hash;
+			string token = request.Hash;
 
-			string email = _hashCodeService.Get(hash)?.Email;
-			if (email == null)
+			RegistrationTokenInfo tokenInfo = DecodeRegistrationToken(token);
+			if (tokenInfo == null)
 				return result;
-
-			_logger.LogDebug("Confirm user registration for {email} with hash: {hash}.", email.Mask(), hash);
-
-			CommonGrpcResponse response = await _userInfoService.TryCall(service => service.ConfirmUserInfoAsync(new UserInfoConfirmRequest
+			
+			Guid? userId = tokenInfo.RegistrationUserId;
+			if (tokenInfo.RegistrationTokenExpires < _systemClock.Now)
 			{
-				ActivationHash = hash
+				_logger.LogWarning("Token {token} for user: {userId} has expired ({date})", token, userId, tokenInfo.RegistrationTokenExpires);
+				return result;
+			}
+
+			_logger.LogDebug("Confirm user registration for user {userId} with hash: {hash}.", userId, token);
+
+			ActivateUserInfoResponse activateResponse = await _userInfoService.TryCall(service => service.ActivateUserInfoAsync(new UserInfoActivateRequest
+			{
+				UserId = userId
 			}));
 
-			bool confirmed = response.IsSuccess;
-			if (confirmed)
-				await InitUserProgress(email);
-			else
-				_logger.LogError("Can't confirm user registration for {email}.", email.Mask());
-
-			return new ConfirmRegistrationGrpcResponse {Email = email};
-		}
-
-		private async Task InitUserProgress(string email)
-		{
-			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByLoginAsync(new UserInfoAuthRequest {UserName = email});
-			if (userInfo == null)
-				_logger.LogError("Can't init user progress for {email}. No info for user retrieved", email.Mask());
+			string userName = activateResponse?.UserName;
+			if (!userName.IsNullOrEmpty())
+				await InitUserProgress(userId);
 			else
 			{
-				CommonGrpcResponse initResponse = await _progressService.InitProgressAsync(new InitEducationProgressGrpcRequest {UserId = userInfo.UserInfo.UserId});
-				bool? initSuccess = initResponse?.IsSuccess;
-				if (initSuccess != true)
-					_logger.LogError("Can't init user progress for {email}. Init return false.", email.Mask());
+				_logger.LogError("Can't confirm user registration for user {userId}.", userId);
+				return result;
 			}
+
+			result.Email = userName;
+
+			return result;
+		}
+
+		private RegistrationTokenInfo DecodeRegistrationToken(string token)
+		{
+			RegistrationTokenInfo tokenInfo = null;
+
+			try
+			{
+				tokenInfo = _encoderDecoder.DecodeProto<RegistrationTokenInfo>(token);
+			}
+			catch (Exception exception)
+			{
+				_logger.LogError("Can't decode registration token info ({token}), with message {message}", token, exception.Message);
+			}
+
+			return tokenInfo;
+		}
+
+		private async Task InitUserProgress(Guid? userId)
+		{
+			CommonGrpcResponse initResponse = await _progressService.InitProgressAsync(new InitEducationProgressGrpcRequest {UserId = userId});
+			bool? initSuccess = initResponse?.IsSuccess;
+			if (initSuccess != true)
+				_logger.LogError("Can't init user progress for {userId}. Init return false.", userId);
 		}
 	}
 }

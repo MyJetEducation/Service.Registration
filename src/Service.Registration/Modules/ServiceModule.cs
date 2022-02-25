@@ -4,7 +4,6 @@ using MyJetWallet.Sdk.ServiceBus;
 using MyServiceBus.TcpClient;
 using Service.Core.Client.Services;
 using Service.EducationProgress.Client;
-using Service.Registration.Models;
 using Service.Registration.Services;
 using Service.ServiceBus.Models;
 using Service.UserAccount.Client;
@@ -16,9 +15,12 @@ namespace Service.Registration.Modules
 	{
 		protected override void Load(ContainerBuilder builder)
 		{
+			builder.Register(context => new EncoderDecoder(Program.EncodingKey))
+				.As<IEncoderDecoder>()
+				.SingleInstance();
+
 			builder.RegisterType<RegistrationService>().AsImplementedInterfaces().SingleInstance();
 			builder.RegisterType<SystemClock>().AsImplementedInterfaces().SingleInstance();
-			builder.RegisterType<HashCodeService<EmailHashDto>>().As<IHashCodeService<EmailHashDto>>().SingleInstance();
 
 			builder.RegisterUserInfoCrudClient(Program.Settings.UserInfoCrudServiceUrl, Program.LogFactory.CreateLogger(typeof(UserInfoCrudClientFactory)));
 			builder.RegisterUserAccountClient(Program.Settings.UserAccountServiceUrl, Program.LogFactory.CreateLogger(typeof(UserAccountClientFactory)));
