@@ -29,6 +29,7 @@ namespace Service.Registration.Services
 		private readonly IGrpcServiceProxy<IUserAccountService> _userProfileService;
 		private readonly IEncoderDecoder _encoderDecoder;
 		private readonly ISystemClock _systemClock;
+		private readonly IObjectCache<string> _userNameCache;
 
 		public RegistrationService(ILogger<RegistrationService> logger,
 			IServiceBusPublisher<RegistrationInfoServiceBusModel> publisher,
@@ -36,7 +37,7 @@ namespace Service.Registration.Services
 			IEducationProgressService progressService,
 			IGrpcServiceProxy<IUserAccountService> userProfileService, 
 			IEncoderDecoder encoderDecoder, 
-			ISystemClock systemClock)
+			ISystemClock systemClock, IObjectCache<string> userNameCache)
 		{
 			_logger = logger;
 			_publisher = publisher;
@@ -45,10 +46,16 @@ namespace Service.Registration.Services
 			_userProfileService = userProfileService;
 			_encoderDecoder = encoderDecoder;
 			_systemClock = systemClock;
+			_userNameCache = userNameCache;
 		}
 
 		public async ValueTask<CommonGrpcResponse> RegistrationAsync(RegistrationGrpcRequest request)
 		{
+			string userName = request.UserName;
+
+			if (_userNameCache.Exists(userName))
+				return CommonGrpcResponse.Success;
+
 			UserIdResponse userIdResponse = await CreateUserInfo(request);
 			Guid? userId = userIdResponse.UserId;
 			if (userId == null)
@@ -58,24 +65,20 @@ namespace Service.Registration.Services
 			if (!userAccountSaveResponse)
 				return CommonGrpcResponse.Fail;
 
-			string userName = request.UserName;
-
-			string hash = GenerateRegistrationToken(userId);
-
-			await PublishToServiceBus(userName, hash);
-			
-			return CommonGrpcResponse.Success;
-		}
-
-		private string GenerateRegistrationToken(Guid? userId)
-		{
 			int timeout = Program.ReloadedSettings(model => model.RegistrationTokenExpireMinutes).Invoke();
+			DateTime expires = _systemClock.Now.AddMinutes(timeout);
 
-			return _encoderDecoder.EncodeProto(new RegistrationTokenInfo
+			string hash = _encoderDecoder.EncodeProto(new RegistrationTokenInfo
 			{
 				RegistrationUserId = userId,
-				RegistrationTokenExpires = _systemClock.Now.AddMinutes(timeout)
+				RegistrationTokenExpires = expires
 			});
+
+			await PublishToServiceBus(userName, hash);
+
+			_userNameCache.Add(userName, expires);
+
+			return CommonGrpcResponse.Success;
 		}
 
 		private async Task<UserIdResponse> CreateUserInfo(RegistrationGrpcRequest request)
