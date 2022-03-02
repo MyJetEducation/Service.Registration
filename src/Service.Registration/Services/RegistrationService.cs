@@ -157,6 +157,8 @@ namespace Service.Registration.Services
 				return result;
 			}
 
+			_userNameCache.Remove(userName);
+
 			result.Email = userName;
 
 			return result;
