@@ -1,5 +1,4 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.ServiceBus;
 using MyServiceBus.TcpClient;
@@ -22,10 +21,10 @@ namespace Service.Registration.Modules
 
 			builder.RegisterType<RegistrationService>().AsImplementedInterfaces().SingleInstance();
 			builder.RegisterType<SystemClock>().AsImplementedInterfaces().SingleInstance();
-			builder.RegisterType<IObjectCache<string>>().AsImplementedInterfaces().SingleInstance();
+			builder.RegisterType<ObjectCache<string>>().AsImplementedInterfaces().SingleInstance();
 
-			builder.RegisterUserInfoCrudClient(Program.Settings.UserInfoCrudServiceUrl, Program.LogFactory.CreateLogger(typeof(UserInfoCrudClientFactory)));
-			builder.RegisterUserAccountClient(Program.Settings.UserAccountServiceUrl, Program.LogFactory.CreateLogger(typeof(UserAccountClientFactory)));
+			builder.RegisterUserInfoCrudClient(Program.Settings.UserInfoCrudServiceUrl, Program.LogFactory.CreateLogger(typeof (UserInfoCrudClientFactory)));
+			builder.RegisterUserAccountClient(Program.Settings.UserAccountServiceUrl, Program.LogFactory.CreateLogger(typeof (UserAccountClientFactory)));
 
 			builder.RegisterEducationProgressClient(Program.Settings.EducationProgressServiceUrl);
 
